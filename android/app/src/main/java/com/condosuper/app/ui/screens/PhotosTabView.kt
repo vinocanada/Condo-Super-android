@@ -75,13 +75,23 @@ fun PhotoFeedView() {
     val firebaseManager = FirebaseManager.getInstance()
     val photos by firebaseManager.photos.collectAsState()
     val currentEmployee by firebaseManager.currentEmployee.collectAsState()
+    val timeEntries by firebaseManager.timeEntries.collectAsState()
     
     var searchQuery by remember { mutableStateOf("") }
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var selectedMonth by remember { mutableStateOf<String?>(null) }
     var filterByCurrentSite by remember { mutableStateOf(false) }
     
-    val filteredPhotos = remember(photos, searchQuery, selectedTag, selectedMonth, filterByCurrentSite, currentEmployee) {
+    // Get current active time entry's site ID
+    val currentSiteId = remember(timeEntries, currentEmployee) {
+        val employeeId = currentEmployee?.id ?: return@remember null
+        timeEntries
+            .filter { it.employeeId == employeeId && it.clockOutTime == null }
+            .maxByOrNull { it.clockInTime }
+            ?.siteId
+    }
+    
+    val filteredPhotos = remember(photos, searchQuery, selectedTag, selectedMonth, filterByCurrentSite, currentSiteId) {
         photos.filter { photo ->
             val matchesSearch = searchQuery.isBlank() || 
                 photo.comment.contains(searchQuery, ignoreCase = true) ||
@@ -90,7 +100,7 @@ fun PhotoFeedView() {
             val matchesMonth = selectedMonth == null || 
                 SimpleDateFormat("MMM yyyy", Locale.getDefault())
                     .format(Date(photo.date)) == selectedMonth
-            val matchesSite = !filterByCurrentSite || photo.siteId == currentEmployee?.id
+            val matchesSite = !filterByCurrentSite || currentSiteId != null && photo.siteId == currentSiteId
             
             matchesSearch && matchesTag && matchesMonth && matchesSite
         }
@@ -210,18 +220,28 @@ fun PhotoGalleryView() {
     val firebaseManager = FirebaseManager.getInstance()
     val photos by firebaseManager.photos.collectAsState()
     val currentEmployee by firebaseManager.currentEmployee.collectAsState()
+    val timeEntries by firebaseManager.timeEntries.collectAsState()
     
     var searchQuery by remember { mutableStateOf("") }
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var filterByCurrentSite by remember { mutableStateOf(false) }
     
-    val filteredPhotos = remember(photos, searchQuery, selectedTag, filterByCurrentSite, currentEmployee) {
+    // Get current active time entry's site ID
+    val currentSiteId = remember(timeEntries, currentEmployee) {
+        val employeeId = currentEmployee?.id ?: return@remember null
+        timeEntries
+            .filter { it.employeeId == employeeId && it.clockOutTime == null }
+            .maxByOrNull { it.clockInTime }
+            ?.siteId
+    }
+    
+    val filteredPhotos = remember(photos, searchQuery, selectedTag, filterByCurrentSite, currentSiteId) {
         photos.filter { photo ->
             val matchesSearch = searchQuery.isBlank() || 
                 photo.comment.contains(searchQuery, ignoreCase = true) ||
                 photo.tags.any { it.contains(searchQuery, ignoreCase = true) }
             val matchesTag = selectedTag == null || photo.tags.contains(selectedTag)
-            val matchesSite = !filterByCurrentSite || photo.siteId == currentEmployee?.id
+            val matchesSite = !filterByCurrentSite || currentSiteId != null && photo.siteId == currentSiteId
             
             matchesSearch && matchesTag && matchesSite
         }

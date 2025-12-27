@@ -257,11 +257,12 @@ fun EmployeeLoginScreen(
                                     // Use saved credentials
                                     val credentials = biometricManager.retrieveCredentials()
                                     if (credentials != null) {
-                                        companyId = credentials.first
-                                        employeeIdentifier = credentials.second
-                                        pin = credentials.third
-                                        // Proceed with login
-                                        performLogin()
+                                        // Use credentials directly without modifying state
+                                        performLogin(
+                                            companyId = credentials.first,
+                                            employeeIdentifier = credentials.second,
+                                            pin = credentials.third
+                                        )
                                     }
                                 }
                             }
@@ -280,7 +281,13 @@ fun EmployeeLoginScreen(
             }
             
             Button(
-                onClick = { performLogin() },
+                onClick = { 
+                    performLogin(
+                        companyId = companyId,
+                        employeeIdentifier = employeeIdentifier,
+                        pin = pin
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading && companyId.isNotBlank() && employeeIdentifier.isNotBlank() && pin.length == 4
             ) {
@@ -296,7 +303,7 @@ fun EmployeeLoginScreen(
         }
     }
     
-    fun performLogin() {
+    fun performLogin(companyId: String, employeeIdentifier: String, pin: String) {
         if (companyId.isBlank() || employeeIdentifier.isBlank() || pin.length != 4) {
             errorMessage = "Please fill all fields correctly"
             return
