@@ -335,7 +335,8 @@ fun EmployeeLoginScreen(
                 biometricManager.enableBiometric()
             }
             
-            // Set current employee (you may need to add this to FirebaseManager)
+            // Set current employee
+            firebaseManager.setCurrentEmployee(employee)
             onSuccess()
         }
     }

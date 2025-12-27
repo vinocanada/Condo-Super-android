@@ -29,6 +29,9 @@ class FirebaseManager private constructor() {
     private val _currentCompany = MutableStateFlow<Company?>(null)
     val currentCompany: StateFlow<Company?> = _currentCompany.asStateFlow()
     
+    private val _currentEmployee = MutableStateFlow<Employee?>(null)
+    val currentEmployee: StateFlow<Employee?> = _currentEmployee.asStateFlow()
+    
     private val _companies = MutableStateFlow<List<Company>>(emptyList())
     val companies: StateFlow<List<Company>> = _companies.asStateFlow()
     
@@ -69,6 +72,10 @@ class FirebaseManager private constructor() {
     fun setCompany(company: Company) {
         _currentCompany.value = company
         setupListeners()
+    }
+    
+    fun setCurrentEmployee(employee: Employee) {
+        _currentEmployee.value = employee
     }
 
     private fun setupListeners() {
@@ -501,12 +508,12 @@ class FirebaseManager private constructor() {
             senderId = senderId,
             senderName = senderName,
             recipientId = recipientId,
+            chatType = if (recipientId == null) Message.ChatType.GROUP else Message.ChatType.DIRECT,
             content = encryptedContent,
             imageURL = encryptedImageURL,
             videoURL = encryptedVideoURL,
             timestamp = System.currentTimeMillis(),
-            isRead = false,
-            isEncrypted = true
+            isRead = false
         )
         
         try {
